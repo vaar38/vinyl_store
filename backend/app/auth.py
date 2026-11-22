@@ -5,11 +5,11 @@ from sqlalchemy.exc import IntegrityError
 
 from app.db import get_db
 
-from app.schemas.users import UserRegister, UserResponse
+from app.schemas.users import UserRegister, UserResponse, UserLogin, TokenResponse
 
 from app.models import User, Role
 
-from app.security import hash_password
+from app.security import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
@@ -46,4 +46,18 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
         raise
     db.refresh(user)
     return {"id": user.id, "email": user.email, "full_name": user.full_name, "phone": user.phone}
+    
+@router.post("/auth/login", response_model=TokenResponse)
+def login(data: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+
+    if user is None or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Аккаунт отключён")
+
+    token = create_access_token(user.id)
+
+    return TokenResponse(access_token=token)
     
