@@ -9,7 +9,7 @@ from app.schemas.users import UserRegister, UserResponse, UserLogin, TokenRespon
 
 from app.models import User, Role
 
-from app.security import hash_password, verify_password, create_access_token
+from app.security import hash_password, verify_password, create_access_token, get_current_user
 
 router = APIRouter()
 
@@ -60,4 +60,13 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token(user.id)
 
     return TokenResponse(access_token=token)
+
+@router.get("/users/me", response_model=UserResponse)
+def get_me(user: User = Depends(get_current_user)):
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "phone": user.phone
+    }
     
