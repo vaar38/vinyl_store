@@ -5,10 +5,10 @@ from sqlalchemy import (
     DateTime,
     func,
     String,
-
 )
 
 from app.db import Base
+
 
 class OrderStatusHistory(Base):
     __tablename__ = "order_status_history"

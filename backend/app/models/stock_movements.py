@@ -1,16 +1,7 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    ForeignKey,
-    DateTime,
-    func,
-    String,
-    Text,
-    Numeric,
-    CheckConstraint
-)
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, func, String, CheckConstraint
 
 from app.db import Base
+
 
 class StockMovement(Base):
     __tablename__ = "stock_movements"
