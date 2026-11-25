@@ -7,10 +7,11 @@ from sqlalchemy import (
     String,
     Text,
     Numeric,
-    CheckConstraint
+    CheckConstraint,
 )
 
 from app.db import Base
+
 
 class Order(Base):
     __tablename__ = "orders"
@@ -21,8 +22,8 @@ class Order(Base):
     recipient_phone = Column(String(32), nullable=False)
     delivery_address = Column(Text, nullable=False)
     delivery_comment = Column(Text)
-    delivery_fee = Column(Numeric(12,2), nullable=False)
-    total_amount = Column(Numeric(12,2), nullable=False)
+    delivery_fee = Column(Numeric(12, 2), nullable=False)
+    total_amount = Column(Numeric(12, 2), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     shipped_at = Column(DateTime(timezone=True))
     delivered_at = Column(DateTime(timezone=True))

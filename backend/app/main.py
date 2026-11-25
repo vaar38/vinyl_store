@@ -1,3 +1,4 @@
+from app.admin import router as admin_router
 from fastapi import FastAPI
 from app.health import router
 from app.catalog import router as catalog_router
@@ -12,3 +13,4 @@ app.include_router(catalog_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(cart_router, prefix="/api")
 app.include_router(orders_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")

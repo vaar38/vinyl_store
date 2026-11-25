@@ -8,4 +8,18 @@ from .orders import Order
 from .records import Record
 from .roles import Role
 from .stock_movements import StockMovement
-from .users import User 
+from .users import User
+
+__all__ = [
+    "Artist",
+    "CartItem",
+    "Cart",
+    "Genre",
+    "OrderItem",
+    "OrderStatusHistory",
+    "Order",
+    "Record",
+    "Role",
+    "StockMovement",
+    "User",
+]

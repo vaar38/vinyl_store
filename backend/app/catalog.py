@@ -13,8 +13,11 @@ router = APIRouter()
 
 @router.get("/records", response_model=list[RecordsResponse])
 def get_catalog(q: str | None = None, genre_id: int | None = None, db: Session = Depends(get_db)):
-    query = db.query(Record,Artist).join(Artist, Artist.id == Record.artist_id).filter(Record.is_active.is_(True))
-
+    query = (
+        db.query(Record, Artist)
+        .join(Artist, Artist.id == Record.artist_id)
+        .filter(Record.is_active.is_(True))
+    )
 
     if genre_id is not None:
         query = query.filter(Record.genre_id == genre_id)
@@ -36,6 +39,7 @@ def get_catalog(q: str | None = None, genre_id: int | None = None, db: Session =
         result.append(item)
 
     return result
+
 
 @router.get("/records/{record_id}", response_model=RecordDetailResponse)
 def get_record(record_id: int, db: Session = Depends(get_db)):
