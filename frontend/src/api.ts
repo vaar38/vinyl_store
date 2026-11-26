@@ -7,6 +7,8 @@ export type RecordItem = {
   cover_url: string | null;
 };
 export type RecordDetail = RecordItem & {
+  artist_image_url?: string | null;
+  artist_biography?: string | null;
   description: string | null;
   release_year: number | null;
   genre: string;
@@ -20,6 +22,7 @@ export type User = {
   phone: string | null;
 };
 export type CartItem = {
+  cover_url: string | null;
   record_id: number;
   album: string;
   price: number | string;

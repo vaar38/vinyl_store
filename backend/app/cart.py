@@ -77,6 +77,7 @@ def get_cart(user: User = Depends(get_current_user), db: Session = Depends(get_d
         item = {
             "record_id": record.id,
             "album": record.album,
+            "cover_url": record.cover_url,
             "price": record.price,
             "quantity": cart_item.quantity,
             "available_stock": record.available_stock,

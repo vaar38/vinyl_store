@@ -100,6 +100,8 @@ def main():
                 artist = Artist(name=artist_name)
                 db.add(artist)
                 db.flush()
+            if artist_name == "A$AP Rocky" and not artist.image_url:
+                artist.image_url = "/images/artists/asap-rocky.jpg"
             existing = (
                 db.query(Record)
                 .filter(Record.artist_id == artist.id, Record.album == album)

@@ -75,6 +75,24 @@ function Cover({
   );
 }
 
+function CartCover({ item }: { item: CartItem }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [item.cover_url]);
+  return (
+    <div className="cart-disc">
+      {item.cover_url && !failed ? (
+        <img
+          src={item.cover_url}
+          alt={`Обложка ${item.album}`}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <Disc3 size={32} aria-label="Обложка отсутствует" />
+      )}
+    </div>
+  );
+}
+
 function Modal({
   title,
   children,
@@ -625,6 +643,16 @@ export default function App() {
                 В корзину <ShoppingBag size={18} />
               </button>
             </div>
+            {detail.artist_image_url && (
+              <section className="artist-profile" aria-label="Об исполнителе">
+                <img src={detail.artist_image_url} alt={detail.artist} />
+                <div>
+                  <p className="eyebrow">Исполнитель</p>
+                  <h3>{detail.artist}</h3>
+                  {detail.artist_biography && <p>{detail.artist_biography}</p>}
+                </div>
+              </section>
+            )}
           </div>
         </Modal>
       )}
@@ -752,9 +780,7 @@ export default function App() {
               <div className="cart-items">
                 {cart.map((item) => (
                   <div className="cart-item" key={item.record_id}>
-                    <div className="cart-disc">
-                      <Disc3 size={38} />
-                    </div>
+                    <CartCover item={item} />
                     <div className="cart-info">
                       <h3>{item.album}</h3>
                       <p>{money(item.price)} / шт.</p>
