@@ -317,3 +317,127 @@ def test_stale_admin_edit_cannot_restore_reserved_stock(shop):
     assert response.status_code == 409
     with sessions() as db:
         assert db.get(Record, 1).available_stock == 0
+
+
+def test_disabled_user_cannot_login(shop):
+    client, sessions, users = shop
+    with sessions.begin() as db:
+        db.get(User, users["buyer"]).is_active = False
+    response = client.post("/api/auth/login", json={
+        "email": "buyer@example.com", "password": "TestPassword123",
+    })
+    assert response.status_code == 403
+    assert "access_token" not in response.json()
+
+
+def test_empty_checkout_creates_no_order(shop):
+    client, sessions, users = shop
+    assert checkout(client, users).status_code == 400
+    add(client, users)
+    client.delete("/api/cart/items/1", headers=headers(users))
+    assert checkout(client, users).status_code == 400
+    with sessions() as db:
+        assert db.query(Order).count() == 0
+        assert db.query(StockMovement).count() == 0
+        assert db.get(Record, 1).available_stock == 1
+
+
+def test_archived_record_blocks_existing_cart_checkout(shop):
+    client, sessions, users = shop
+    add(client, users)
+    client.delete("/api/admin/records/1", headers=headers(users, "admin"))
+    assert checkout(client, users).status_code == 409
+    with sessions() as db:
+        assert db.query(Order).count() == 0
+        assert db.query(CartItem).one().quantity == 1
+        assert db.get(Record, 1).available_stock == 1
+
+
+def test_multi_item_order_uses_exact_decimal_total(shop):
+    client, sessions, users = shop
+    with sessions.begin() as db:
+        db.get(Record, 1).available_stock = 3
+        db.add(Record(
+            id=2, artist_id=1, genre_id=1, album="Second album",
+            price=Decimal("0.10"), available_stock=2,
+        ))
+    add(client, users, quantity=2)
+    client.post("/api/cart/items", headers=headers(users), json={"record_id": 2, "quantity": 2})
+    response = checkout(client, users)
+    assert response.status_code == 201
+    assert Decimal(str(response.json()["total_amount"])) == Decimal("200.70")
+    assert Decimal(str(response.json()["delivery_fee"])) == Decimal("0")
+    with sessions() as db:
+        assert db.get(Record, 1).available_stock == 1
+        assert db.get(Record, 2).available_stock == 0
+        assert db.query(OrderItem).count() == 2
+        assert db.query(CartItem).count() == 0
+
+
+def test_order_list_contains_only_own_orders(shop):
+    client, sessions, users = shop
+    with sessions.begin() as db:
+        db.get(Record, 1).available_stock = 2
+    ids = {}
+    for name in ("buyer", "other"):
+        add(client, users, name)
+        ids[name] = checkout(client, users, name).json()["id"]
+    for name in ids:
+        orders = client.get("/api/orders", headers=headers(users, name)).json()
+        assert [order["id"] for order in orders] == [ids[name]]
+    all_orders = client.get("/api/staff/orders", headers=headers(users, "staff")).json()
+    assert {order["id"] for order in all_orders} == set(ids.values())
+
+
+def test_repeated_staff_status_has_one_history_event(shop):
+    client, sessions, users = shop
+    add(client, users)
+    order_id = checkout(client, users).json()["id"]
+    for _ in range(2):
+        response = client.patch(
+            f"/api/staff/orders/{order_id}/status", headers=headers(users, "staff"),
+            json={"status": "assembling"},
+        )
+        assert response.status_code == 200
+    with sessions() as db:
+        assert db.query(OrderStatusHistory).filter_by(order_id=order_id).count() == 2
+        assert db.get(Record, 1).available_stock == 0
+
+
+def test_invalid_catalog_reference_is_rejected_without_stock_movement(shop):
+    client, sessions, users = shop
+    response = client.post("/api/admin/records", headers=headers(users, "admin"), json={
+        "album": "Missing artist", "artist_id": 9999, "genre_id": 1,
+        "price": "100.00", "available_stock": 5,
+    })
+    assert response.status_code == 422
+    with sessions() as db:
+        assert db.query(Record).count() == 1
+        assert db.query(StockMovement).count() == 0
+
+
+def test_artist_photo_and_biography_in_record_details(shop):
+    client, sessions, users = shop
+    before = client.get("/api/records/1").json()
+    assert before["artist_image_url"] is None
+    assert before["artist_biography"] is None
+    with sessions.begin() as db:
+        artist = db.get(Artist, 1)
+        artist.image_url = "/images/artists/example.jpg"
+        artist.biography = "Artist biography"
+    detail = client.get("/api/records/1").json()
+    assert detail["artist_image_url"] == "/images/artists/example.jpg"
+    assert detail["artist_biography"] == "Artist biography"
+    assert detail["album"] == "Test album"
+
+
+def test_cart_returns_current_record_cover(shop):
+    client, sessions, users = shop
+    add(client, users)
+    assert client.get("/api/cart", headers=headers(users)).json()[0]["cover_url"] is None
+    with sessions.begin() as db:
+        db.get(Record, 1).cover_url = "/images/covers/example.jpg"
+    item = client.get("/api/cart", headers=headers(users)).json()[0]
+    assert item["cover_url"] == "/images/covers/example.jpg"
+    assert item["record_id"] == 1
+    assert item["quantity"] == 1

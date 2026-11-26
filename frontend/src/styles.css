@@ -623,6 +623,13 @@ dialog::backdrop {
   color: #555e47;
   border-radius: 3px;
 }
+.cart-disc img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
 .cart-info {
   flex: 1;
   min-width: 0;
@@ -915,7 +922,8 @@ dialog::backdrop {
     gap: 10px;
   }
   .cart-disc {
-    display: none;
+    width: 48px;
+    height: 48px;
   }
   .toast {
     font-size: 12px;
@@ -1141,4 +1149,33 @@ dialog::backdrop {
     max-width: none;
     min-width: 165px;
   }
+}
+
+.artist-profile {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+.artist-profile img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.artist-profile h3 {
+  font-size: 21px;
+  margin-bottom: 8px;
+}
+.artist-profile p:not(.eyebrow) {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+@media (max-width: 680px) {
+  .artist-profile { gap: 14px; }
+  .artist-profile img { width: 80px; height: 80px; }
 }

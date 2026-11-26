@@ -13,6 +13,8 @@ class RecordsResponse(BaseModel):
 
 
 class RecordDetailResponse(RecordsResponse):
+    artist_image_url: str | None = None
+    artist_biography: str | None = None
     description: str | None = None
     release_year: int | None = None
     genre: str

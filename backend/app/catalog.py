@@ -65,6 +65,8 @@ def get_record(record_id: int, db: Session = Depends(get_db)):
         "release_year": record.release_year,
         "artist": artist.name,
         "genre": genre.name,
+        "artist_image_url": artist.image_url,
+        "artist_biography": artist.biography,
     }
 
     return item
